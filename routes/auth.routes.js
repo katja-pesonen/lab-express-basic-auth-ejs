@@ -6,6 +6,7 @@ const bcryptjs = require('bcryptjs');
 const saltRounds = 10; 
  
 const User = require('../models/User.model');
+const { default: mongoose } = require('mongoose');
 
 
 /* GET signup page */
@@ -19,6 +20,12 @@ router.post('/signup', (req, res, next) => {
     // console.log("The form data: ", req.body);
    
     const { username, email, password } = req.body;
+
+      // make sure users fill all mandatory fields:
+  if (!username || !email || !password) {
+    res.render('auth/signup', { errorMessage: 'All fields are mandatory. Please provide your username, email and password.' });
+    return;
+  }
    
     bcryptjs
       .genSalt(saltRounds)
@@ -34,11 +41,17 @@ router.post('/signup', (req, res, next) => {
           passwordHash: hashedPassword
         });
       })
-      .then(userFromDB => {
-        //console.log('Newly created user is: ', userFromDB);
-        res.redirect('/userProfile') })
-
-      .catch(error => next(error))
+      .then (userFromDB => {
+        console.log('Newly created user is: ', userFromDB);
+        res.redirect('/userProfile') 
+    })
+      .catch( (error) => {
+          if (error instanceof mongoose.Error.ValidationError) {
+              res.status(500).render('auth/signup', { errorMessage: error.message })
+          } else {
+        next(error)
+          }
+      })
   });
 
 // for user profile page: 
