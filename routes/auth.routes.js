@@ -26,6 +26,14 @@ router.post('/signup', (req, res, next) => {
     res.render('auth/signup', { errorMessage: 'All fields are mandatory. Please provide your username, email and password.' });
     return;
   }
+
+  const regex = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,}/;
+  if (!regex.test(password)) {
+    res
+      .status(500)
+      .render('auth/signup', { errorMessage: 'Password needs to have at least 6 chars and must contain at least one number, one lowercase and one uppercase letter.' });
+    return;
+  }
    
     bcryptjs
       .genSalt(saltRounds)
@@ -48,16 +56,68 @@ router.post('/signup', (req, res, next) => {
       .catch( (error) => {
           if (error instanceof mongoose.Error.ValidationError) {
               res.status(500).render('auth/signup', { errorMessage: error.message })
-          } else {
+
+          } else if (error.code === 11000) {
+            res.status(500).render('auth/signup', {
+               errorMessage: 'Username and email need to be unique. Either username or email is already used.'
+            });
+        }
+          else {
         next(error)
           }
+
+      }) // close .catch()
+  }); // close router.post()
+
+
+  //////////// L O G I N ///////////
+ 
+// GET route ==> to display the login form to users
+router.get('/login', (req, res) => res.render('auth/login'));
+
+// POST login route ==> to process form data
+router.post('/login', (req, res, next) => {
+    const { email, password } = req.body;
+   
+    if (email === '' || password === '') {
+      res.render('auth/login', {
+        errorMessage: 'Please enter both, email and password to login.'
+      });
+      return;
+    }
+   
+    User.findOne({ email }) // <== check if there's user with the provided email
+      .then(user => {
+          // <== "user" here is just a placeholder and represents the response from the DB
+        if (!user) {
+            // <== if there's no user with provided email, notify the user who is trying to login
+          res.render('auth/login', { errorMessage: 'Email is not registered. Try with other email.' });
+          return;
+        }
+       // if there's a user, compare provided password
+      // with the hashed password saved in the database
+         else if (bcryptjs.compareSync(password, user.passwordHash)) {
+        // if the two passwords match, render the user-profile.ejs and
+        //                   pass the user object to this view
+        //                                 |
+        //                                 V
+          res.render('users/user-profile', { user });
+        } else {
+        // if the two passwords DON'T match, render the login form again
+        // and send the error message to the user
+          res.render('auth/login', { errorMessage: 'Incorrect password.' });
+        }
       })
+      .catch(error => next(error));
   });
+
 
 // for user profile page: 
   router.get('/userProfile', (req, res) => {
       res.render('users/user-profile')
     });
+
+    
 
  
 module.exports = router;
