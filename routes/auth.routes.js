@@ -51,7 +51,7 @@ router.post('/signup', (req, res, next) => {
       })
       .then (userFromDB => {
         console.log('Newly created user is: ', userFromDB);
-        res.redirect('/userProfile') 
+        res.redirect('/login') 
     })
       .catch( (error) => {
           if (error instanceof mongoose.Error.ValidationError) {
@@ -77,6 +77,8 @@ router.get('/login', (req, res) => res.render('auth/login'));
 
 // POST login route ==> to process form data
 router.post('/login', (req, res, next) => {
+    console.log('SESSION =====> ', req.session);
+    
     const { email, password } = req.body;
    
     if (email === '' || password === '') {
@@ -101,7 +103,10 @@ router.post('/login', (req, res, next) => {
         //                   pass the user object to this view
         //                                 |
         //                                 V
-          res.render('users/user-profile', { user });
+        // res.render('users/user-profile', { user });
+                  //******* SAVE THE USER IN THE SESSION ********//
+        req.session.currentUser = user;
+        res.redirect('/userProfile');
         } else {
         // if the two passwords DON'T match, render the login form again
         // and send the error message to the user
@@ -112,12 +117,30 @@ router.post('/login', (req, res, next) => {
   });
 
 
-// for user profile page: 
-  router.get('/userProfile', (req, res) => {
-      res.render('users/user-profile')
+  // Logout:
+  router.post('/logout', (req, res, next) => {
+    req.session.destroy(err => {
+      if (err) next(err);
+      res.redirect('/');
     });
+  });
 
+
+// for user profile page: 
+router.get('/userProfile', (req, res) => {
+  res.render('users/user-profile', { userInSession: req.session.currentUser });
+});
     
+
+// for "main" profile page: 
+router.get('/userProfile/main', (req, res) => {
+  res.render('users/main', { userInSession: req.session.currentUser });
+});
+
+// for "private" profile page: 
+router.get('/userProfile/private', (req, res) => {
+  res.render('users/private', { userInSession: req.session.currentUser });
+});
 
  
 module.exports = router;

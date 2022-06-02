@@ -1,11 +1,23 @@
 <p>This is your profile page my friend!</p>
 
-<% if( typeof userInSession !== 'undefined')  { %>
-    <h2>Welcome, <%= userInSession.username %>!</h2>
-    <p>This is your profile page my friend!</p>
-    <button>
-      <a href="/userProfile">Reload the page</a>
-    </button>
-  <% } else { %>
-    <p>Still no logged in user, sorry!</p>
-  <% } %>
+
+<% if(userInSession) { %>
+  <h2>Welcome, <%= userInSession.username %>!</h2>
+  <p>This is your profile page my friend!</p>
+  <button>
+    <a href="/userProfile">Reload the page</a>
+  </button>
+
+  <button>
+    <a href="/userProfile/main">Main page</a>
+  </button>
+
+  <button>
+    <a href="/userProfile/private">Private page</a>
+  </button>
+
+<% } else { %>
+  
+  <br><p>Still no logged in user, sorry!</p>
+ 
+<% } %>
