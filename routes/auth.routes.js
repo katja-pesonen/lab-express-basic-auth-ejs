@@ -8,11 +8,12 @@ const saltRounds = 10;
 const User = require('../models/User.model');
 const { default: mongoose } = require('mongoose');
 
+// require auth middleware
+const { isLoggedIn, isLoggedOut } = require('../middleware/route-guard.js');
+
 
 /* GET signup page */
-router.get("/signup", (req, res, next) => {
-    res.render("auth/signup.ejs");
-  });
+router.get('/signup', isLoggedOut, (req, res) => res.render('auth/signup'));
  
 
 // POST route ==> to process form data
@@ -127,18 +128,18 @@ router.post('/login', (req, res, next) => {
 
 
 // for user profile page: 
-router.get('/userProfile', (req, res) => {
+router.get('/userProfile', isLoggedIn, (req, res) => {
   res.render('users/user-profile', { userInSession: req.session.currentUser });
 });
     
 
 // for "main" profile page: 
-router.get('/userProfile/main', (req, res) => {
+router.get('/userProfile/main', isLoggedIn, (req, res) => {
   res.render('users/main', { userInSession: req.session.currentUser });
 });
 
 // for "private" profile page: 
-router.get('/userProfile/private', (req, res) => {
+router.get('/userProfile/private', isLoggedIn, (req, res) => {
   res.render('users/private', { userInSession: req.session.currentUser });
 });
 
